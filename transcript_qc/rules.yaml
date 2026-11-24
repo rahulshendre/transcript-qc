@@ -1,0 +1,58 @@
+# Rules for classifying and counting differences between two transcripts.
+# Edit this file to tune the tool. No code changes are needed.
+# rules_strict.yaml is the same file with the assignment's rules applied literally;
+# docs/ACCURACY_NOTE.md says what each change here did to the Episode 50 counts.
+
+# Rules are tried in this order for every difference. The first one that matches
+# decides the category, and its id is written to the CSV. A reviewer can reorder
+# or remove ids here.
+order:
+  - CC_TAG          # touches a [sound tag]                      -> CC
+  - CC_MUSIC        # touches a ♪ marker                         -> CC
+  - PUNCT_ONLY      # only punctuation differs                   -> Punctuation
+  - MINOR_SPACE     # same text once spaces are removed          -> Minor
+  - LANG_VARIANT    # every word is a known spelling pair (see variants) -> Language
+  - LANG_MARKS      # same letters, different matra/nukta/anusvara/chandrabindu -> Language
+  - MAJOR_ADDED     # a whole word added or removed (also inside a replacement) -> Major
+  - LANG_SIMILAR    # every word is spelled almost the same (see similarity) -> Language
+  - MAJOR_DIFFERENT # a word that is a different word                  -> Major
+
+similarity:
+  # Normalised edit distance (0 = identical, 1 = nothing in common) at or below
+  # this counts as a spelling mistake (Language); above it, a different word (Major).
+  language_max_distance: 0.4
+
+# Combining marks ignored when checking whether two words are "the same letters".
+# Mn = nukta, anusvara, chandrabindu, virama and most vowel signs; Mc = other vowel signs.
+ignore_marks: [Mn, Mc]
+# Treat long and short independent vowels (उ and ऊ) as the same letter.
+fold_vowel_length: true
+
+# Known spelling variants: written A -> reference B. Matched in either spelling.
+variants:
+  - [वह, वो]
+  - [ना, न]
+
+repeated:
+  # A pair (A text -> B text) seen this many times or more is one Repeated mistake.
+  # The assignment says 2. On Episode 50 that makes 46 Repeated mistakes against the
+  # reviewer's 4: a single mark such as a comma turns up in dozens of places by chance,
+  # while a spelling habit (ना -> न, वह -> वो) is what the category is for.
+  min_occurrences: 5
+  # Per category override: a punctuation pair must recur more often to count as a pattern.
+  min_occurrences_by_category: {Punctuation: 10, CC: 10}
+  # Which categories can turn into a Repeated mistake.
+  categories: [Major, Language, Punctuation, CC, Minor]
+
+# Judgement calls. Each switch decides whether a kind of difference is counted.
+# Ignored differences are still tracked in the document and listed for the reviewer.
+ignore:
+  music_markers: true          # true: a missing or extra ♪ is song formatting, not a mistake
+  line_break_punctuation: true # true: a mark B drops where it breaks the line is not a mistake
+  long_cuts_words: 4           # N > 0: a run of N or more words only one side has is a cut, not a word mistake
+tags:
+  count: changed_only          # all, or changed_only (count a [tag] only when both sides have one)
+
+# Short codes in file names mapped to the movie name for the summary table.
+movies:
+  BEK: Bharat Ek Khoj

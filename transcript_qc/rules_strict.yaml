@@ -1,0 +1,51 @@
+# STRICT profile: the counting rules exactly as the assignment states them, with no judgement
+# switches. Used as the baseline the tuned rules.yaml is measured against.
+
+# Rules are tried in this order for every difference. The first one that matches
+# decides the category, and its id is written to the CSV. A reviewer can reorder
+# or remove ids here.
+order:
+  - CC_TAG          # touches a [sound tag]                      -> CC
+  - CC_MUSIC        # touches a ♪ marker                         -> CC
+  - PUNCT_ONLY      # only punctuation differs                   -> Punctuation
+  - MINOR_SPACE     # same text once spaces are removed          -> Minor
+  - LANG_VARIANT    # every word is a known spelling pair (see variants) -> Language
+  - LANG_MARKS      # same letters, different matra/nukta/anusvara/chandrabindu -> Language
+  - MAJOR_ADDED     # a whole word added or removed (also inside a replacement) -> Major
+  - LANG_SIMILAR    # every word is spelled almost the same (see similarity) -> Language
+  - MAJOR_DIFFERENT # a word that is a different word                  -> Major
+
+similarity:
+  # Normalised edit distance (0 = identical, 1 = nothing in common) at or below
+  # this counts as a spelling mistake (Language); above it, a different word (Major).
+  language_max_distance: 0.4
+
+# Combining marks ignored when checking whether two words are "the same letters".
+# Mn = nukta, anusvara, chandrabindu, virama and most vowel signs; Mc = other vowel signs.
+ignore_marks: [Mn, Mc]
+# Treat long and short independent vowels (उ and ऊ) as the same letter.
+fold_vowel_length: true
+
+# Known spelling variants: written A -> reference B. Matched in either spelling.
+variants:
+  - [वह, वो]
+  - [ना, न]
+
+repeated:
+  # A pair (A text -> B text) seen this many times or more is one Repeated mistake.
+  min_occurrences: 2
+  # Only pairs that would otherwise be counted in these categories can be Repeated.
+  categories: [Major, Language, Punctuation, CC, Minor]
+
+# Judgement calls. Each switch decides whether a kind of difference is counted.
+# Ignored differences are still tracked in the document and listed for the reviewer.
+ignore:
+  music_markers: false         # true: a missing or extra ♪ is song formatting, not a mistake
+  line_break_punctuation: false  # true: a mark B drops where it breaks the line is not a mistake
+  long_cuts_words: 0           # N > 0: a run of N or more words only one side has is a cut, not a word mistake
+tags:
+  count: all                   # all, or changed_only (count a [tag] only when both sides have one)
+
+# Short codes in file names mapped to the movie name for the summary table.
+movies:
+  BEK: Bharat Ek Khoj
