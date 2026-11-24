@@ -8,6 +8,8 @@ import SideBySide from "./SideBySide.jsx";
 import { advanceAfter, keyAction, mergeResult, moveSelection, visibleItems } from "./model.js";
 
 const shortName = (name) => name.replace(/\.docx$/i, "");
+// "LE1 BEK_50_Feltiv.sushila.docx" is shown as "LE1", the way the brief labels the columns
+const fileLabel = (name) => (shortName(name).match(/^LE\d+/i) || [shortName(name)])[0];
 
 export default function Review({ initial, onClose }) {
   const id = initial.id;
@@ -20,6 +22,7 @@ export default function Review({ initial, onClose }) {
   const [selectedId, setSelectedId] = useState(null);
   const [selection, setSelection] = useState(null);
   const [help, setHelp] = useState(false);
+  const [editing, setEditing] = useState(false);
   const [message, setMessage] = useState(
     initial.restored ? `Picked up where you stopped (${initial.restored.items} decisions restored).` : "",
   );
@@ -201,22 +204,31 @@ export default function Review({ initial, onClose }) {
     <div className="app">
       <header className="top">
         <strong className="brand">Transcript QC</strong>
-        <span className="files" title={`${initial.a_name} with ${initial.b_name}`}>
-          {shortName(initial.a_name)} with {shortName(initial.b_name)}
-        </span>
-        <div className="details">
-          {[["movie", "Movie"], ["writer", "Written by"], ["episode", "Episode"]].map(([key, label]) => (
-            <label key={key}>
-              {label}
-              <input
-                value={details[key]}
-                data-testid={`review-${key}`}
-                onChange={(e) => setDetails({ ...details, [key]: e.target.value })}
-                onBlur={(e) => changeDetails(key, e.target.value)}
-              />
-            </label>
-          ))}
-        </div>
+        {editing ? (
+          <div className="details">
+            {[["movie", "Movie"], ["writer", "Written by"], ["episode", "Episode"]].map(([key, label]) => (
+              <label key={key}>
+                {label}
+                <input
+                  value={details[key]}
+                  data-testid={`review-${key}`}
+                  onChange={(e) => setDetails({ ...details, [key]: e.target.value })}
+                  onBlur={(e) => changeDetails(key, e.target.value)}
+                />
+              </label>
+            ))}
+          </div>
+        ) : (
+          <span className="files" data-testid="details-line">
+            {[details.movie, details.writer, details.episode && `Episode ${details.episode}`]
+              .filter(Boolean)
+              .join(" · ") || "No details yet"}
+          </span>
+        )}
+        <button className="link" onClick={() => setEditing((on) => !on)} data-testid="edit-details">
+          {editing ? "Done" : "Edit details"}
+        </button>
+        <span className="spacer" />
         <button className="link" onClick={() => setHelp(true)} data-testid="open-help">Keys ?</button>
         <button className="link" onClick={onClose}>Close review</button>
       </header>
@@ -241,8 +253,8 @@ export default function Review({ initial, onClose }) {
         <SideBySide
           rows={rows}
           selected={selected}
-          aName={shortName(initial.a_name)}
-          bName={shortName(initial.b_name)}
+          aName={fileLabel(initial.a_name)}
+          bName={fileLabel(initial.b_name)}
           onSelection={setSelection}
         />
         <DetailPanel

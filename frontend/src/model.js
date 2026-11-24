@@ -6,7 +6,7 @@ export const CATEGORIES = ["Major", "Language", "Punctuation", "CC", "Repeated",
 export const CATEGORY_KEYS = Object.fromEntries(CATEGORIES.map((c, i) => [String(i + 1), c]));
 
 export const STATUS_FILTERS = [
-  { id: "counted", label: "Counted" },
+  { id: "counted", label: "All" },
   { id: "pending", label: "Pending" },
   { id: "done", label: "Done" },
   { id: "rejected", label: "Rejected" },

@@ -5,6 +5,7 @@ export default function Scorecard({ counts, engineCounts, progress, filter, onPi
   const engineTotal = Object.values(engineCounts).reduce((a, b) => a + b, 0);
   const total = Object.values(counts).reduce((a, b) => a + b, 0);
   const percent = progress.total ? Math.round((progress.reviewed / progress.total) * 100) : 0;
+  const anyChanged = Object.keys(counts).some((name) => counts[name] !== engineCounts[name]);
   const card = (name, reviewed, engine, active, onClick) => {
     const changed = reviewed !== engine;
     return (
@@ -34,14 +35,17 @@ export default function Scorecard({ counts, engineCounts, progress, filter, onPi
         )}
         {card("Total", total, engineTotal, false, () => onPick(null))}
       </div>
-      <div className="progress-row">
-        <div className="bar" role="progressbar" aria-valuenow={percent} aria-valuemin="0" aria-valuemax="100">
-          <div className="bar-fill" style={{ width: `${percent}%` }} />
-        </div>
+      <div className="progress-text">
         <button className="link" onClick={onPending} data-testid="progress">
           Reviewed {progress.reviewed} of {progress.total}
         </button>
-        <span className="hint">Click any count to filter the list. The old number is the engine's.</span>
+        <span className="hint">
+          {" "}{"·"} click any count to filter the list
+          {anyChanged ? ". A crossed-out number is what the tool counted." : ""}
+        </span>
+      </div>
+      <div className="bar" role="progressbar" aria-valuenow={percent} aria-valuemin="0" aria-valuemax="100">
+        <div className="bar-fill" style={{ width: `${percent}%` }} />
       </div>
     </section>
   );

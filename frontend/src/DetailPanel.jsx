@@ -4,8 +4,10 @@ import { CATEGORIES, lineOf, statusLabel } from "./model.js";
 export default function DetailPanel({ item, noteRef, onAction, selection, onAdd }) {
   const [picked, setPicked] = useState([]);
   const [note, setNote] = useState("");
+  const [choosing, setChoosing] = useState(false);
   useEffect(() => {
     setPicked([]);
+    setChoosing(false);
     setNote(item ? item.reviewer_note : "");
   }, [item && item.id, item && item.reviewer_note]);
 
@@ -21,74 +23,81 @@ export default function DetailPanel({ item, noteRef, onAction, selection, onAdd 
   const saveNote = () => {
     if (note.trim() !== (item.reviewer_note || "")) onAction("note", { note }, false);
   };
+  const reason = item.engine_note || (item.source === "manual" ? "Added by you." : "");
   return (
     <aside className="detail-pane" data-testid="detail" data-item={item.id}>
-      <h2>
+      <h2 className="pane-title">
         Mistake #{item.id}
         <span className={`badge st-${item.status}`} data-testid="detail-status">{statusLabel(item.status)}</span>
       </h2>
-      <dl>
-        <dt>File A</dt>
-        <dd lang="hi" className="a-text" data-testid="detail-a">{item.a_text || "-"}</dd>
-        <dt>File B</dt>
-        <dd lang="hi" className="b-text" data-testid="detail-b">{item.b_text || "-"}</dd>
-        <dt>Category</dt>
-        <dd>
-          <span className={`pill cat-${item.category}`} data-testid="detail-category">{item.category}</span>
-          {item.engine_category && item.engine_category !== item.category && (
-            <span className="was-note"> engine said {item.engine_category}</span>
-          )}
-        </dd>
-        <dt>Rule</dt>
-        <dd>
-          <code>{item.rule_id}</code>
-          <span className="reason">{item.engine_note}</span>
-          {item.confidence < 0.8 && <span className="unsure"> Not very sure ({Math.round(item.confidence * 100)}%).</span>}
-        </dd>
-        <dt>Line</dt>
-        <dd>
-          {lineOf(item)} in {item.line_no ? "file A" : "file B"}
-        </dd>
-        {ignored && (
-          <>
-            <dt>Not counted</dt>
-            <dd>{item.ignored_because}</dd>
-          </>
+      <p className="d-line">
+        File A: <span lang="hi" className="a-text" data-testid="detail-a">{item.a_text || "-"}</span>
+      </p>
+      <p className="d-line">
+        File B: <span lang="hi" className="b-text" data-testid="detail-b">{item.b_text || "-"}</span>
+      </p>
+      <p className="d-line">
+        <strong>Category: <span data-testid="detail-category">{item.category}</span></strong>
+        {item.engine_category && item.engine_category !== item.category && (
+          <span className="was-note"> (tool said {item.engine_category})</span>
         )}
-      </dl>
+      </p>
+      <p className="rule">
+        {reason && `Rule: ${reason}`}
+        {item.confidence < 0.8 && <span className="unsure"> Not very sure ({Math.round(item.confidence * 100)}%).</span>}
+      </p>
+      <p className="where">Line {lineOf(item)} in {item.line_no ? "file A" : "file B"}</p>
+      {ignored && <p className="rule">Not counted: {item.ignored_because}</p>}
 
       {ignored ? (
-        <div className="buttons">
-          <button className="primary" onClick={() => onAction("promote", {}, false)} data-testid="promote">
+        <div className="stack">
+          <button className="strong" onClick={() => onAction("promote", {}, false)} data-testid="promote">
             Count it (P)
           </button>
         </div>
       ) : (
-        <>
-          <div className="buttons">
-            <button className="primary" onClick={() => onAction("confirm")} data-testid="confirm">
-              Confirm <kbd>Enter</kbd>
+        <div className="stack">
+          <button className="strong" onClick={() => onAction("confirm")} data-testid="confirm">
+            Confirm (Enter)
+          </button>
+          <button onClick={() => setChoosing((on) => !on)} data-testid="change-category" aria-expanded={choosing}>
+            Change category (1-6)
+          </button>
+          {choosing && (
+            <div className="categories" role="group" aria-label="Change category">
+              {CATEGORIES.map((c, i) => (
+                <button
+                  key={c}
+                  className={`cat-btn ${item.category === c ? "on" : ""}`}
+                  data-testid={`set-${c}`}
+                  onClick={() => onAction("category", { category: c })}
+                >
+                  {i + 1} {c}
+                </button>
+              ))}
+            </div>
+          )}
+          <button onClick={() => onAction("reject")} data-testid="reject">
+            Not a mistake (X)
+          </button>
+          <textarea
+            ref={noteRef}
+            rows="1"
+            value={note}
+            data-testid="note"
+            placeholder="Add a note (N)"
+            onChange={(e) => setNote(e.target.value)}
+            onBlur={saveNote}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) e.currentTarget.blur();
+            }}
+          />
+          {item.status !== "pending" && (
+            <button className="link" onClick={() => onAction("reset", {}, false)} data-testid="reset">
+              Undo (U)
             </button>
-            <button onClick={() => onAction("reject")} data-testid="reject">
-              Not a mistake <kbd>X</kbd>
-            </button>
-            <button onClick={() => onAction("reset", {}, false)} data-testid="reset">
-              Undo <kbd>U</kbd>
-            </button>
-          </div>
-          <div className="categories" role="group" aria-label="Change category">
-            {CATEGORIES.map((c, i) => (
-              <button
-                key={c}
-                className={`cat-btn cat-${c} ${item.category === c ? "on" : ""}`}
-                data-testid={`set-${c}`}
-                onClick={() => onAction("category", { category: c })}
-              >
-                <kbd>{i + 1}</kbd> {c}
-              </button>
-            ))}
-          </div>
-        </>
+          )}
+        </div>
       )}
 
       {item.occurrences.length > 1 && (
@@ -125,21 +134,6 @@ export default function DetailPanel({ item, noteRef, onAction, selection, onAdd 
         </section>
       )}
 
-      <label className="note">
-        Note <kbd>N</kbd>
-        <textarea
-          ref={noteRef}
-          rows="2"
-          value={note}
-          data-testid="note"
-          placeholder="Why? Goes into the CSV."
-          onChange={(e) => setNote(e.target.value)}
-          onBlur={saveNote}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) e.currentTarget.blur();
-          }}
-        />
-      </label>
       {item.source === "manual" || item.source === "split" ? (
         <button className="link danger" onClick={() => onAction("delete", {}, false)}>
           Delete this mistake

@@ -306,6 +306,28 @@ def test_undo_and_the_help_overlay(page, files):
     eventually(page, lambda: not page.is_visible("[data-testid=help]"))
 
 
+def test_change_category_shows_the_six_choices_only_when_asked(page, files):
+    open_review(page, *files)
+    assert page.locator("[data-testid^=set-]").count() == 0
+    page.click("[data-testid=change-category]")
+    assert page.locator("[data-testid^=set-]").count() == 6
+    current = page.inner_text("[data-testid=detail-category]")
+    target = "Minor" if current != "Minor" else "Major"
+    before = counts(page)
+    page.click(f"[data-testid=set-{target}]")
+    eventually(page, lambda: counts(page)[target] == before[target] + 1)
+    assert page.locator("[data-testid^=set-]").count() == 0
+
+
+def test_the_details_line_can_be_edited_on_request(page, files):
+    open_review(page, *files)
+    assert page.locator("[data-testid=review-movie]").count() == 0
+    page.click("[data-testid=edit-details]")
+    page.fill("[data-testid=review-movie]", "Test Film")
+    page.click("[data-testid=edit-details]")
+    eventually(page, lambda: "Test Film" in page.inner_text("[data-testid=details-line]"))
+
+
 # the decisions behind the numbers ---------------------------------------------------------------------------------
 
 def test_not_a_mistake_removes_it_from_the_count_but_keeps_it_listed(page, files):

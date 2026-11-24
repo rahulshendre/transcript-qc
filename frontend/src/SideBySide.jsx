@@ -64,12 +64,10 @@ export default function SideBySide({ rows, selected, aName, bName, onSelection }
   }, [activeRow, selected && selected.id, rows.length]);
   return (
     <section className="side-pane" aria-label="Side by side">
+      <h2 className="pane-title">Side by side</h2>
       <div className="side-head">
         <span>File A ({aName})</span>
         <span>File B ({bName})</span>
-        <span className="legend">
-          <mark className="seg a-only">only in A</mark> <mark className="seg b-only">only in B</mark>
-        </span>
       </div>
       <div
         className="rows"
@@ -86,6 +84,9 @@ export default function SideBySide({ rows, selected, aName, bName, onSelection }
             diffs={row.index === activeRow && selected ? selected.diffs : NONE}
           />
         ))}
+      </div>
+      <div className="legend">
+        <mark className="seg a-only">Red</mark> = only in A, <mark className="seg b-only">green</mark> = only in B
       </div>
     </section>
   );

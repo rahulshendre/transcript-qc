@@ -8,14 +8,16 @@ export default function MistakeList({ list, selectedId, onSelect, filter, onFilt
   }, [selectedId]);
   return (
     <section className="list-pane" aria-label="Mistakes">
+      <h2 className="pane-title">Mistakes</h2>
       <div className="list-head">
-        <div className="chips" role="tablist">
+        <div className="filters" role="tablist">
+          <span className="filter-label">Filter:</span>
           {STATUS_FILTERS.map((f) => (
             <button
               key={f.id}
               role="tab"
               aria-selected={filter.status === f.id}
-              className={`chip ${filter.status === f.id ? "on" : ""}`}
+              className={`filter ${filter.status === f.id ? "on" : ""}`}
               data-testid={`filter-${f.id}`}
               onClick={() => onFilter({ ...filter, status: f.id })}
             >
@@ -66,8 +68,7 @@ export default function MistakeList({ list, selectedId, onSelect, filter, onFilt
                 </span>
                 <span className={`badge st-${item.status}`}>{statusLabel(item.status)}</span>
               </span>
-              <span className="item-text" lang="hi">{pairText(item)}</span>
-              <span className="item-line">line {lineOf(item)}</span>
+              <span className="item-text" lang="hi" title={`line ${lineOf(item)}`}>{pairText(item)}</span>
             </button>
           </li>
         ))}
