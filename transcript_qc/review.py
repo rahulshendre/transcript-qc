@@ -16,6 +16,7 @@ import csv
 import hashlib
 import json
 import os
+import re
 import tempfile
 from collections import defaultdict
 from dataclasses import asdict, dataclass, field
@@ -24,6 +25,7 @@ from pathlib import Path
 
 from transcript_qc.compare import Comparison, compare_files
 from transcript_qc.count import Analysis, analyse
+from transcript_qc.reader import InputError, docx_warnings
 from transcript_qc.rules import CATEGORIES, Rules, load_rules
 from transcript_qc.sidebyside import Row, build_rows
 from transcript_qc.summary import Details, details_from_name, summary_elements
@@ -137,6 +139,7 @@ class ReviewSession:
         self.rules_name = rules_name
         self.rows, self.row_of_diff = build_rows(comparison)
         self.items: list[Item] = []
+        self.warnings: list[str] = []  # text in the files that is not compared
         self.log: list[dict] = []
         self._keys: set[str] = set()
         self._build_items()
@@ -405,7 +408,7 @@ class ReviewSession:
             "engine_counts": self.engine_counts, "counts": self.counts(),
             "progress": self.progress(),
             "items": [i.as_dict() for i in self.items if not i.deleted],
-            "row_count": len(self.rows),
+            "row_count": len(self.rows), "warnings": self.warnings,
             "paragraphs": {"a": len(self.comparison.a_paragraphs),
                            "b": len(self.comparison.b_paragraphs)},
         }
@@ -499,8 +502,14 @@ class SessionStore:
 
     def _build(self, session_id, a_path, b_path, a_name, b_name, rules_name, details):
         rules: Rules = load_rules(rules_name)
+        def named(message: str) -> str:  # the saved copies are a.docx and b.docx
+            shown = {a_path.name: a_name, b_path.name: b_name}
+            return re.sub("|".join(map(re.escape, shown)), lambda m: shown[m.group()], message)
+
         try:
             comparison = compare_files(a_path, b_path)
+        except InputError as error:
+            raise ReviewError(named(str(error))) from error
         except Exception as error:  # a file that is not a Word document
             raise ReviewError(
                 "One of the files could not be read as a Word (.docx) document."
@@ -514,6 +523,7 @@ class SessionStore:
         session = ReviewSession(
             session_id, comparison, analysis, details, a_path, b_path, a_name, b_name, rules_name
         )
+        session.warnings = [named(w) for p in (a_path, b_path) for w in docx_warnings(p)]
         state = self.folder(session_id) / "state.json"
         outcome = None
         if state.is_file():

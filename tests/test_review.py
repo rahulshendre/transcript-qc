@@ -537,7 +537,7 @@ def test_the_state_is_plain_json_and_has_what_the_screen_needs(session):
 
 
 def test_files_that_are_not_word_documents_are_refused_with_a_plain_message(store):
-    with pytest.raises(ReviewError, match="could not be read as a Word"):
+    with pytest.raises(ReviewError, match="a.docx is not a Word .docx file"):
         store.open(b"not a docx", b"also not", "a.docx", "b.docx")
 
 

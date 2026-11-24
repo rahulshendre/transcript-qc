@@ -65,7 +65,8 @@ def test_the_strict_profile_can_be_chosen(client, docs):
 
 
 def test_bad_uploads_get_plain_messages(client, docs):
-    assert upload(client, (b"nope", docs[1])).json()["detail"].startswith("One of the files")
+    bad = upload(client, (b"nope", docs[1])).json()["detail"]
+    assert bad == "LE1 BEK_50_Feltiv.sushila.docx is not a Word .docx file, or it is damaged."
     nothing = {"file_a": ("a.docx", b""), "file_b": ("b.docx", b"")}
     empty = client.post("/api/sessions", files=nothing)
     assert empty.status_code == 400 and "both files" in empty.json()["detail"]
@@ -261,3 +262,25 @@ def test_without_a_built_page_the_root_explains_what_to_do(tmp_path, monkeypatch
     monkeypatch.setattr(web_app, "STATIC", tmp_path / "missing")
     page = TestClient(web_app.create_app(tmp_path / "s")).get("/")
     assert page.status_code == 200 and "has not been built" in page.text
+
+
+def test_upload_refuses_a_file_with_tracked_changes_by_its_real_name(client, docs, tmp_path):
+    from helpers import make_qc
+
+    qc, _, _ = make_qc(tmp_path, ["जल भी कहां था"], ["जल भी कहाँ था"])
+    files = {"file_a": ("already_reviewed.docx", qc.read_bytes()), "file_b": ("B.docx", docs[1])}
+    response = client.post("/api/sessions", files=files)
+    assert response.status_code == 400
+    assert "already_reviewed.docx has tracked changes" in response.json()["detail"]
+
+
+def test_upload_reports_a_table_instead_of_hiding_it(client, docs, tmp_path):
+    path = tmp_path / "with_table.docx"
+    path.write_bytes(docs[0])
+    doc = Document(str(path))
+    doc.add_table(rows=1, cols=1).cell(0, 0).text = "तालिका"
+    doc.save(path)
+    files = {"file_a": ("My transcript.docx", path.read_bytes()), "file_b": ("B.docx", docs[1])}
+    state = client.post("/api/sessions", files=files).json()
+    assert state["warnings"] == ["My transcript.docx has 1 table. Text inside tables is not compared."]
+    assert upload(client, docs).json()["warnings"] == []

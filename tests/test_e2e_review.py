@@ -182,7 +182,7 @@ def test_a_file_that_is_not_a_word_document_gets_a_plain_message(page, tmp_path,
     page.set_input_files("[data-testid=file-b]", str(files[1]))
     page.click("[data-testid=compare]")
     page.wait_for_selector("[data-testid=upload-error]")
-    assert "could not be read as a Word" in page.inner_text("[data-testid=upload-error]")
+    assert "is not a Word .docx file" in page.inner_text("[data-testid=upload-error]")
 
 
 # scorecard and filtering -------------------------------------------------------------------------------

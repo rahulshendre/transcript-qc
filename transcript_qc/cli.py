@@ -11,6 +11,7 @@ from transcript_qc.accuracy import format_table, parse_reference
 from transcript_qc.align import Diff
 from transcript_qc.compare import Comparison, compare_files
 from transcript_qc.count import Analysis, analyse
+from transcript_qc.reader import InputError, docx_warnings
 from transcript_qc.report import write_csv
 from transcript_qc.revisions import round_trip
 from transcript_qc.rules import CATEGORIES, load_rules
@@ -94,7 +95,18 @@ def main(argv: list[str] | None = None) -> int:
         print(f"error: {error}", file=sys.stderr)
         return 2
 
-    result = compare_files(args.a, args.b)
+    try:
+        for path in (args.a, args.b):
+            for warning in docx_warnings(path):
+                print(f"warning: {warning}", file=sys.stderr)
+        result = compare_files(args.a, args.b)
+    except InputError as error:
+        print(f"error: {error}", file=sys.stderr)
+        return 2
+    for path, paragraphs in ((args.a, result.a_paragraphs), (args.b, result.b_paragraphs)):
+        if not any(p.strip() for p in paragraphs):
+            print(f"error: {path.name} has no text.", file=sys.stderr)
+            return 2
     analysis = analyse(result, rules)
     color = sys.stdout.isatty() and not args.no_color
     print(summary(result))
