@@ -27,6 +27,14 @@ _MUSIC_MARKS = frozenset("♪♫")
 _TAG = re.compile(r"\[[^\]]*\]")
 _SPACES = re.compile(r"\s+")
 
+# Characters nobody can see and no Hindi text depends on: zero-width space, word joiner,
+# byte order mark, soft hyphen, left-to-right and right-to-left marks. They are dropped
+# for matching, so one file carrying them never shows up as a mistake.
+_INVISIBLE = {ord(c): None for c in "\u200b\u2060\ufeff\u00ad\u200e\u200f"}
+# Zero-width (non-)joiners change how a conjunct is drawn when they sit inside a word, so
+# there they stay. At the edge of a word they do nothing and are dropped.
+_JOINERS = "\u200c\u200d"
+
 
 @dataclass(frozen=True, slots=True)
 class Token:
@@ -47,9 +55,11 @@ def _is_separator(ch: str) -> bool:
 
 def _normalise(piece: str, kind: str) -> str:
     """The form used for matching. Spacing inside a [sound tag] is formatting, so it collapses."""
-    norm = unicodedata.normalize("NFC", piece)
+    norm = unicodedata.normalize("NFC", piece).translate(_INVISIBLE)
     if kind == TAG:
         norm = "[" + _SPACES.sub(" ", norm[1:-1]).strip() + "]"
+    elif kind == WORD:
+        norm = norm.strip(_JOINERS)
     return norm
 
 
@@ -74,7 +84,9 @@ def tokenize_line(text: str, para: int) -> list[Token]:
                 j += 1
             kind = WORD
         piece = text[i:j]
-        tokens.append(Token(piece, _normalise(piece, kind), kind, para, i, j))
+        norm = _normalise(piece, kind)
+        if norm:  # a "word" made only of invisible characters is not a word
+            tokens.append(Token(piece, norm, kind, para, i, j))
         i = j
     return tokens
 
