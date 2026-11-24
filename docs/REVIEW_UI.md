@@ -27,9 +27,11 @@ To change the screen: `cd frontend && npm install && npm run build` (writes into
    differs, the engine's number struck through next to it. Clicking a card lists exactly the mistakes
    behind that number.
 3. **Check each mistake.** Selecting one scrolls the side-by-side view to its line and shows the A and B
-   text, the category, and the rule that fired with a plain reason. Red words are only in A, green
-   words only in B.
-4. **Decide.** Confirm, change category, or "not a mistake". The counts update at once.
+   text, the category, and why the tool chose it in plain words. Red words are only in A, green
+   words only in B. The list is filtered by All, Pending, Done, Rejected or Ignored, and can be sorted by
+   line number, category or least sure first. The rule id for each mistake is in the CSV, not on the screen.
+4. **Decide.** Four buttons in the right-hand panel: Confirm, Change category (opens the six types),
+   Not a mistake, and Add a note. Undo appears once a decision is made. The counts update at once.
 5. **Repeated mistakes** list every occurrence with its line. Confirm the group, or split off
    occurrences that are really different mistakes.
 6. **Catch what the engine missed.** The Ignored filter lists differences the engine did not count
