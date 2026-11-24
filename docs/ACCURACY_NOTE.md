@@ -64,8 +64,9 @@ own; Minor and the spelling rules are checked before Major's distance rule (othe
 
 * **Tuned on one episode.** Steps 1 to 5 were chosen by looking at this episode's table. Punctuation
   matching to the unit is partly luck. A second episode with its QC table is the real test.
-* **Word.** Reject All gives A back at 100.00 percent and Accept All gives B at 100.00 percent, and the file
-  opens in python-docx and macOS QuickLook. Opening in Word without a repair prompt is unverified.
+* **Word.** Reject All gives A back at 100.00 percent and Accept All gives B at 100.00 percent. The file
+  opens in python-docx, macOS QuickLook and ONLYOFFICE (its reader keeps all 344 insertions, 466 deletions,
+  the table and the 11 font parts). Opening in Word without a repair prompt is unverified.
 * **No reviewer test yet.** The keyboard-only pass from the brief has not been done by a reviewer.
 
 ## Questions for Abinash

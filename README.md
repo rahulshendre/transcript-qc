@@ -91,8 +91,9 @@ To change the screen: `cd frontend && npm install && npm run build`. The build l
   compare, but the Language rules will not fit.
 * **QC document layout.** A line that exists only in B is inserted inside the nearest paragraph of A, not as
   a new paragraph, and a ♪ pair that sits between two lines lands at the end of the earlier one.
-* **Word not tested.** Reject All and Accept All round-trip to 100.00 percent in code and the file opens in
-  python-docx and macOS QuickLook. It has not been opened in Word.
+* **Word not tested.** Reject All and Accept All round-trip to 100.00 percent in code. The file opens in
+  python-docx, macOS QuickLook and ONLYOFFICE, whose reader keeps all 344 insertions, 466 deletions, the
+  summary table and the 11 embedded font parts of the Episode 50 file. It has not been opened in Word.
 * **One reviewer, one machine.** The screen has no login and listens on 127.0.0.1 only.
 * **Size.** Eight copies of Episode 50 (17,500 paragraphs) compare in about 4 seconds. Alignment slows
   sharply when the same few lines repeat thousands of times: 4,000 paragraphs made of 5 repeated lines took
