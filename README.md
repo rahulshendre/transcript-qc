@@ -82,6 +82,9 @@ To change the screen: `cd frontend && npm install && npm run build`. The build l
 * **A file with tracked changes is refused.** Accept or reject them in Word first.
 * **Tuned on one episode.** The thresholds in `rules.yaml` come from Episode 50. A second episode with its
   QC table is the test of whether they hold.
+* **A run is one mistake, even across a line break.** If the last word of one line and the first word of
+  the next are both wrong, they touch in the stream and count as one mistake (the brief's rule 1).
+  Episode 50 has 7 such runs, all in the Sanskrit verse and crowd chants.
 * **It cannot see intent.** B may cut a crowd chant or pick another sound tag on purpose. The tool counts
   some of those as mistakes; the review screen is where a person removes them.
 * **Hindi only.** Spelling variants and vowel-length folding are written for Devanagari. Other scripts
