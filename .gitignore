@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+# Episode inputs are PlanetRead content: kept local until Abinash says otherwise
+data/
+out/
+frontend/node_modules/
+frontend/dist/
