@@ -109,6 +109,23 @@ def test_a_missing_input_is_reported_not_crashed_on(files, capsys, tmp_path):
     assert code == 2 and "not found" in out.err
 
 
+def test_a_missing_output_folder_is_made(files, capsys):
+    a, b, tmp = files
+    out = tmp / "new" / "folder" / "x_QC.docx"
+    code, _ = run(capsys, "--a", a, "--b", b, "--out", out)
+    assert code == 0
+    assert out.is_file() and (out.parent / "mistakes.csv").is_file()
+
+
+def test_an_output_that_cannot_be_written_is_reported_not_crashed_on(files, capsys):
+    a, b, tmp = files
+    out = tmp / "x_QC.docx"
+    out.mkdir()  # a folder in the way, like a file held open by Word on Windows
+    code, printed = run(capsys, "--a", a, "--b", b, "--out", out)
+    assert code == 2
+    assert "cannot write" in printed.err and "x_QC.docx" in printed.err
+
+
 def test_bad_rules_or_a_bad_reference_are_reported(files, capsys, tmp_path):
     a, b, _ = files
     code, out = run(capsys, "--a", a, "--b", b, "--rules", tmp_path / "missing.yaml")

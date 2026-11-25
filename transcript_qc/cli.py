@@ -128,16 +128,29 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     details = details_from_name(args.a.name, rules.movies, args.movie, args.writer, args.episode)
-    stats = write_qc(
-        args.a, result, args.out, author=args.author,
-        append=summary_elements(details, analysis.counts),
-    )
-    print(
-        f"wrote {args.out}: {stats.deletions} deletions and {stats.insertions} insertions "
-        f"in {stats.changed_paragraphs} paragraphs"
-    )
     csv_path = args.csv or args.out.with_name("mistakes.csv")
-    rows = write_csv(analysis, csv_path)
+    target = args.out
+    try:
+        args.out.parent.mkdir(parents=True, exist_ok=True)
+        stats = write_qc(
+            args.a, result, args.out, author=args.author,
+            append=summary_elements(details, analysis.counts),
+        )
+        print(
+            f"wrote {args.out}: {stats.deletions} deletions and {stats.insertions} insertions "
+            f"in {stats.changed_paragraphs} paragraphs"
+        )
+        target = csv_path
+        csv_path.parent.mkdir(parents=True, exist_ok=True)
+        rows = write_csv(analysis, csv_path)
+    except OSError as error:
+        # on Windows a file that is open in Word or Excel cannot be replaced
+        print(
+            f"error: cannot write {target} ({error.strerror or error}). "
+            "If it is open in Word or Excel, close it and run again.",
+            file=sys.stderr,
+        )
+        return 2
     print(f"wrote {csv_path}: {rows} rows")
     rejected, accepted = round_trip(args.out, result.a_paragraphs, result.b_paragraphs)
     print(f"round trip: Reject All matches A {rejected:.2%}, Accept All matches B {accepted:.2%}")
