@@ -4,6 +4,8 @@ A reviewer uploads transcript A and reference B, sees every difference side by s
 re-labels or rejects each counted mistake, watches the counts move, and only then exports the QC
 document. The engine does the comparing and counting. The reviewer keeps the final say.
 
+![The review screen on the made-up sample pair](images/review.png)
+
 ## Run it
 
 ```
@@ -14,6 +16,8 @@ python app.py             # opens http://127.0.0.1:8765
 Needs only Python. The page is built and shipped inside the package (`transcript_qc/web/static`),
 with Noto Sans Devanagari bundled, so nothing is fetched from the internet. Reviews are saved in
 `~/Transcript QC/sessions` (change it with `--sessions-dir` or `TRANSCRIPT_QC_HOME`).
+
+On a Windows laptop without Python, use the installer instead: see [WINDOWS.md](WINDOWS.md).
 
 To change the screen: `cd frontend && npm install && npm run build` (writes into the package).
 `npm test` runs the front-end unit tests.
@@ -76,7 +80,8 @@ longer exists is reported, not lost silently.
 
 ## Limits
 
-* Opened in Chrome only. Word has not been used to open the exported .docx (none installed here).
+* Tested in Chrome, on macOS and on GitHub's Windows machines. Edge uses the same engine but has not
+  been tested. Word has not been used to open the exported .docx (none installed here).
 * One reviewer at a time on one computer; there are no logins.
 * A passage where every line differs (the opening verse) is one very tall row. The row stays
   readable, but moving inside it is by scrolling.

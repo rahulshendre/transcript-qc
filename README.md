@@ -1,5 +1,7 @@
 # Transcript QC
 
+[![tests](https://github.com/rahulshendre/transcript-qc/actions/workflows/ci.yml/badge.svg)](https://github.com/rahulshendre/transcript-qc/actions/workflows/ci.yml)
+
 Compares two Hindi transcripts of one episode and counts the mistakes in the first one.
 File A is the transcript being scored. File B is the corrected reference. The tool finds every
 difference, sorts each into Major, Language, Punctuation, CC, Repeated or Minor, applies the
@@ -9,14 +11,50 @@ counting rules and writes:
 * **mistakes.csv.** One row per mistake with its category, the rule that decided it and a plain reason.
 * **A review screen.** A reviewer checks the engine's count, fixes it where it is wrong, and exports the final table.
 
+![The review screen on the made-up sample pair](docs/images/review.png)
+
+Runs offline on Windows, macOS and Linux. Nothing is sent anywhere.
+
+## Docs
+
+| Doc | For |
+|---|---|
+| [docs/WINDOWS.md](docs/WINDOWS.md) | Installing on Windows (installer or Python), building the installer |
+| [docs/REVIEW_UI.md](docs/REVIEW_UI.md) | Using the review screen, keyboard keys, what is saved |
+| [docs/HOW_IT_WORKS.md](docs/HOW_IT_WORKS.md) | What happens from two files in to QC document out |
+| [docs/RULES.md](docs/RULES.md) | Every rule and setting in `rules.yaml` |
+| [docs/ACCURACY_NOTE.md](docs/ACCURACY_NOTE.md) | Episode 50 results against the reviewer's table |
+| [examples/](examples/README.md) | A made-up sample pair with known mistakes to try |
+
 ## Setup
 
 Python 3.11 or newer.
+
+macOS or Linux:
 
 ```
 python -m venv .venv
 .venv/bin/pip install -e .              # add ".[dev]" for tests and lint
 ```
+
+Windows:
+
+```
+py -3.11 -m venv .venv
+.venv\Scripts\pip install -e .
+```
+
+The commands below use the macOS form (`.venv/bin/python`). On Windows write `.venv\Scripts\python`.
+For a Windows laptop without Python there is an installer: see [docs/WINDOWS.md](docs/WINDOWS.md).
+
+## Try it
+
+```
+.venv/bin/python qc_compare.py --a examples/sample_A.docx --b examples/sample_B.docx --out out/sample_QC.docx
+```
+
+The sample pair is made-up text with 21 known mistakes, and the tool should count all 21.
+See [examples/README.md](examples/README.md).
 
 ## Compare two files
 
@@ -38,7 +76,8 @@ gives Bharat Ek Khoj, Sushila, 50). Override them with `--movie`, `--writer`, `-
 | `--author NAME` | Author on every tracked change. Default `QC-Bot`. |
 | `--show-diff` | Print every difference with its context. |
 
-Exit code 0 is success, 2 is a file the tool cannot use (it says why), 1 is a failed round trip.
+Exit code 0 is success, 2 is a file the tool cannot read or write (it says why), 1 is a failed round trip.
+A missing output folder is created.
 
 ## Review screen
 
@@ -47,7 +86,7 @@ Exit code 0 is success, 2 is a file the tool cannot use (it says why), 1 is a fa
 ```
 
 Needs only Python. Nothing is fetched from the network, and reviews are saved in `~/Transcript QC/sessions`.
-See `docs/REVIEW_UI.md`.
+See [docs/REVIEW_UI.md](docs/REVIEW_UI.md).
 
 ## Rules
 
@@ -72,6 +111,9 @@ cd frontend && npm test                  # screen logic
 The Chrome tests need Google Chrome. Tests that read the Episode 50 files look in `data/ep50/` and skip
 when it is missing. The episode files are PlanetRead content and are not in the repo.
 
+GitHub Actions runs the tests on Windows and Linux on every push, then builds the Windows installer,
+installs it, starts it and checks it end to end on the sample pair (`packaging/smoke_test.py`).
+
 To change the screen: `cd frontend && npm install && npm run build`. The build lands in
 `transcript_qc/web/static`, which is committed so Node is not needed to run the app.
 
@@ -95,6 +137,8 @@ To change the screen: `cd frontend && npm install && npm run build`. The build l
   python-docx, macOS QuickLook and ONLYOFFICE, whose reader keeps all 344 insertions, 466 deletions, the
   summary table and the 11 embedded font parts of the Episode 50 file. It has not been opened in Word.
 * **One reviewer, one machine.** The screen has no login and listens on 127.0.0.1 only.
+* **Windows installer is not signed.** Windows shows "Windows protected your PC" once; More info, then
+  Run anyway. It is checked on GitHub's Windows machines, not yet on a reviewer's own laptop.
 * **Size.** Eight copies of Episode 50 (17,500 paragraphs) compare in about 4 seconds. Alignment slows
   sharply when the same few lines repeat thousands of times: 4,000 paragraphs made of 5 repeated lines took
   102 seconds. Real transcripts do not look like that, but a file full of identical refrain lines would be slow.
@@ -109,3 +153,5 @@ To change the screen: `cd frontend && npm install && npm run build`. The build l
 | `transcript_qc/report.py`, `summary.py` | mistakes.csv and the summary table |
 | `transcript_qc/review.py`, `sidebyside.py`, `web/` | Review session, side-by-side rows, API |
 | `frontend/` | The review screen (React, Vite) |
+| `packaging/` | Windows installer build and the end-to-end smoke test |
+| `examples/` | Made-up sample pair |
