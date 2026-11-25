@@ -1,0 +1,37 @@
+# Tests on Windows and Linux on every push. The brief asks for the tool to run on a Windows
+# laptop; this is where that is checked, since development happens on a Mac.
+# The Episode 50 files are not in the repo, so the tests that need them skip here.
+name: tests
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  python:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install -e ".[dev]"
+      - run: python -m ruff check .
+      - run: python -m pytest -q
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: npm ci
+      - run: npm test
