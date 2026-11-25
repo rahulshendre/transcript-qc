@@ -35,7 +35,7 @@ def main(argv: list[str] | None = None) -> None:
     home = args.sessions_dir or default_home() / "sessions"
     url = f"http://{args.host}:{port}"
     print(f"Transcript QC is running at {url}  (reviews are saved in {home})", flush=True)
-    print("Press Ctrl+C to stop.", flush=True)
+    print("Press Ctrl+C or close this window to stop.", flush=True)
     if not args.no_browser:
         threading.Timer(0.8, lambda: webbrowser.open(url)).start()
     uvicorn.run(create_app(home), host=args.host, port=port, log_level="warning")
